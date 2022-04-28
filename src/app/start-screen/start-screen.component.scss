@@ -12,3 +12,19 @@
         max-width: 100%;
     }
 }
+
+.start-label-box {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 200px;
+    display: flex;
+    justify-content: center;
+    img {
+        height: auto;
+        width: 25vw;
+        &:hover {
+            filter: brightness(1.2);
+        }
+    }
+}
