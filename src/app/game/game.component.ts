@@ -11,31 +11,36 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./game.component.scss']
 })
 export class GameComponent implements OnInit {
-  pickCardAnimation = false;
-  currentCard: string = '';
+
   game: Game;
+  gameId: string;
 
   constructor(private route: ActivatedRoute, private firestore: AngularFirestore, public dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.newGame();
     this.route.params.subscribe((params) => {
-      console.log(params['id']);
-    });
+      this.gameId = params['id'];
     this
       .firestore
       .collection('games')
+      .doc(params['id'])
       .valueChanges()
-      .subscribe((game) => {
+      .subscribe((game: any) => {
         console.log('Game update', game);
+        this.game.currentPlayer = game.currentPlayer;
+        this.game.playedCards = game.playedCards;
+        this.game.players = game.players;
+        this.game.stack = game.stack;
+        this.game.pickCardAnimation = game.pickCardAnimation;
+        this.game.pickCardAnimation = game.pickCardAnimation;
       });
+    });
   }
 
   newGame() {
     this.game = new Game();
-    this.firestore
-      .collection('games')
-      .add(this.game.toJson());
+
 
 
     console.log(this.game);
@@ -43,21 +48,23 @@ export class GameComponent implements OnInit {
   
 
   takeCard() {
-    if (!this.pickCardAnimation) {
-      this.currentCard = this.game.stack.pop();
+    if (!this.game.pickCardAnimation) {
+      this.game.currentCard = this.game.stack.pop();
 
-      this.pickCardAnimation = true;
+      this.game.pickCardAnimation = true;
 
-      console.log('New Card:' + this.currentCard);
+      console.log('New Card:' + this.game.currentCard);
       console.log('Game is', this.game);
+      this.saveGame();
 
 
 
       this.game.currentPlayer++;
       this.game.currentPlayer = this.game.currentPlayer % this.game.players.length;
       setTimeout(() => {
-        this.game.playedCards.push(this.currentCard);
-        this.pickCardAnimation = false;
+        this.game.playedCards.push(this.game.currentCard);
+        this.game.pickCardAnimation = false;
+        this.saveGame();
       }, 1000);
 
     }
@@ -69,10 +76,21 @@ export class GameComponent implements OnInit {
     dialogRef.afterClosed().subscribe((name: string) => {
       if (name && name.length > 0) {
         this.game.players.push(name);
+        this.saveGame();
       }
     });
   }
-}
+    saveGame() {
+      this
+      .firestore
+      .collection('games')
+      .doc(this.gameId)
+      .update(this.game.toJson());
+    }
+
+
+  }
+
 
 
 
